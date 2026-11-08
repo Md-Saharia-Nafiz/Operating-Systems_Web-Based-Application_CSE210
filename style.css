@@ -542,3 +542,257 @@ footer a {
 .grid {
     grid-template-columns: repeat(4,1fr)
 }
+@media(max-width:600px) {
+    .grid {
+        grid-template-columns: repeat(2,1fr)
+    }
+}
+.donut {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: center;
+    justify-content: center
+}
+.lg {
+    flex: 1;
+    min-width: 240px
+}
+.li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 12px 0
+}
+.li i {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex: none
+}
+.sn {
+    display: inline-block;
+    min-width: 28px;
+    color: var(--rd)
+}
+.ctc {
+    min-width: 150px
+}
+.ph {
+    display: inline-block;
+    background: var(--rs);
+    color: var(--rd);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap
+}
+.ph {
+    background: rgba(26,115,232,.12);
+    color: #1a73e8
+}
+.ph:hover {
+    background: rgba(26,115,232,.22)
+}
+@media(prefers-color-scheme:dark) {
+    :root:not([data-theme="light"]) .ph {
+        color: #8ab4f8;
+        background: rgba(138,180,248,.16)
+    }
+}
+:root[data-theme="dark"] .ph {
+    color: #8ab4f8;
+    background: rgba(138,180,248,.16)
+}
+.ph svg {
+    color: var(--rd)
+}
+.dtf {
+    position: relative;
+    display: flex;
+    gap: 6px;
+    align-items: center
+}
+.dtf .dti {
+    flex: 1;
+    min-width: 0
+}
+.dtb {
+    margin: 0!important;
+    padding: 6px 10px!important
+}
+.dtp {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none
+}
+.dtf {
+    display: block
+}
+.dtf .dti {
+    width: 100%;
+    padding-right: 44px
+}
+.dtf .dtb {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0!important;
+    padding: 4px 8px!important;
+    border: 0!important;
+    background: transparent!important;
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 6px
+}
+.dtf .dtb:hover {
+    background: var(--rs)!important
+}
+input::placeholder,textarea::placeholder {
+    color: #a8a1a1;
+    opacity: 1
+}
+@media(prefers-color-scheme:dark) {
+    :root:not([data-theme="light"]) input::placeholder {
+        color: #7d7070
+    }
+}
+:root[data-theme="dark"] input::placeholder {
+    color: #7d7070
+}
+select:required:invalid {
+    color: #a8a1a1
+}
+select option {
+    color: var(--tx)
+}
+@media(prefers-color-scheme:dark) {
+    :root:not([data-theme="light"]) select:required:invalid {
+        color: #7d7070
+    }
+}
+:root[data-theme="dark"] select:required:invalid {
+    color: #7d7070
+}
+.inside {
+    flex: 1;
+    min-width: 130px;
+    background: #2c3e50;
+    color: #fff;
+    font-weight: 800;
+    padding: 8px 10px;
+    border-radius: 7px;
+    text-align: center;
+    white-space: nowrap
+}
+.sbar select:disabled {
+    background: #2c3e50;
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+    opacity: 1;
+    font-weight: 700;
+    border-color: #2c3e50
+}
+.phero h1 {
+    font-size: clamp(30px,5.5vw,44px)
+}
+.phero p {
+    font-size: clamp(16px,2.4vw,19px)
+}
+.phero+.wrap {
+    font-size: 17px
+}
+.phero+.wrap label {
+    font-size: 15px
+}
+.phero+.wrap h2 {
+    font-size: 22px
+}
+.phero+.wrap h3 {
+    font-size: 18px
+}
+.phero+.wrap table {
+    font-size: 16px
+}
+.phero+.wrap input,.phero+.wrap select {
+    font-size: 16px;
+    padding: 10px 12px
+}
+.phero+.wrap button {
+    font-size: 16px
+}
+.phero+.wrap button.s {
+    font-size: 14px
+}
+.phero+.wrap .note {
+    font-size: 14px
+}
+.phero h1 {
+    font-size: clamp(34px,6vw,52px)
+}
+.phero p {
+    font-size: clamp(17px,2.6vw,21px)
+}
+.phero+.wrap .note {
+    font-size: 17px;
+    line-height: 1.55;
+    padding: 13px 18px
+}
+#fa button {
+    font-size: 19px;
+    padding: 13px 38px;
+    margin-top: 16px
+}
+#fa input {
+    font-size: 18px;
+    padding: 12px 14px
+}
+.mb nav {
+    padding-bottom: 58px
+}
+.mb nav a {
+    position: relative
+}
+.amb {
+    position: absolute;
+    left: 50%;
+    bottom: -54px;
+    width: 110px;
+    height: 47px;
+    margin-left: -55px;
+    pointer-events: none
+}
+.amb svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    animation: drive 2.4s linear infinite
+}
+.amb .bd {
+    animation: bob .3s ease-in-out infinite alternate
+}
+.amb .wh {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: spin .45s linear infinite
+}
+.amb .s1 {
+    animation: fl .5s steps(1) infinite
+}
+.amb .s2 {
+    animation: fl .5s steps(1) infinite reverse
+}
+.amb .sp {
+    stroke: #9aa3ad;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    animation: dash .5s linear infinite
+}
