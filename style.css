@@ -424,3 +424,121 @@ footer {
     border-top: 1px solid var(--bd);
     margin-top: 20px
 }
+main {
+    max-width: none!important;
+    padding: 0!important
+}
+.note {
+    display: none
+}
+.wrap .note {
+    display: block
+}
+.tl a {
+    color: #fff;
+    text-decoration: none
+}
+.phero {
+    background: radial-gradient(circle at 80% 20%,rgba(196,22,28,.55),transparent 45%),#1b1b3a;
+    color: #fff;
+    text-align: center;
+    padding: 44px 16px 64px
+}
+.phero h1 {
+    margin: 0 0 6px;
+    font-size: clamp(24px,4vw,32px)
+}
+.phero p {
+    margin: 0;
+    opacity: .85
+}
+.phero+.wrap {
+    margin-top: -34px;
+    position: relative
+}
+footer {
+    background: #1b1b3a;
+    color: #ddd;
+    text-align: center;
+    padding: 22px 16px;
+    margin-top: 30px;
+    font-size: 14px;
+    line-height: 1.7
+}
+footer a {
+    color: #fff
+}
+.tl a {
+    color: #fff;
+    text-decoration: none
+}
+.phero {
+    background: radial-gradient(circle at 80% 20%,color-mix(in srgb,var(--g,#c4161c) 60%,transparent),transparent 45%),#1b1b3a
+}
+.phero[data-p=register] {
+    --g: #d6336c
+}
+.phero[data-p=request] {
+    --g: #e8590c
+}
+.phero[data-p=profile] {
+    --g: #7048e8
+}
+.phero[data-p=admin] {
+    --g: #0c8599
+}
+.phero[data-p=donors] {
+    --g: #2f9e44
+}
+.phero[data-p=summary] {
+    --g: #f08c00
+}
+.cb {
+    margin: 14px 0
+}
+.cbh {
+    display: flex;
+    justify-content: space-between
+}
+.cbt {
+    height: 14px;
+    border-radius: 3px;
+    background: var(--bd);
+    overflow: hidden;
+    margin: 5px 0
+}
+.cbf {
+    height: 100%;
+    border-radius: 3px;
+    min-width: 4px
+}
+.sl {
+    margin: 0;
+    padding-left: 22px
+}
+.sl li {
+    margin: 6px 0
+}
+.chip {
+    display: inline-block;
+    padding: 1px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    margin: 2px
+}
+.chip.y {
+    background: rgba(26,127,75,.16);
+    color: var(--ok)
+}
+.chip.n {
+    background: rgba(196,22,28,.14);
+    color: var(--rd)
+}
+.cmp td:nth-child(n+2) {
+    white-space: normal;
+    min-width: 190px
+}
+.grid {
+    grid-template-columns: repeat(4,1fr)
+}
