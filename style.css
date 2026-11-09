@@ -796,3 +796,136 @@ select option {
     stroke-linecap: round;
     animation: dash .5s linear infinite
 }
+@keyframes drive {
+    0% {
+        transform: translateX(-30px);
+        opacity: 0
+    }
+    12% {
+        opacity: 1
+    }
+    88% {
+        opacity: 1
+    }
+    100% {
+        transform: translateX(30px);
+        opacity: 0
+    }
+}
+@keyframes bob {
+    to {
+        transform: translateY(-1.5px)
+    }
+}
+@keyframes spin {
+    to {
+        transform: rotate(360deg)
+    }
+}
+@keyframes fl {
+    0% {
+        fill: #ff2d2d
+    }
+    50% {
+        fill: #ffb300
+    }
+}
+@keyframes dash {
+    0% {
+        transform: translateX(8px);
+        opacity: 0
+    }
+    50% {
+        opacity: .9
+    }
+    100% {
+        transform: translateX(-8px);
+        opacity: 0
+    }
+}
+@media(prefers-reduced-motion:reduce) {
+    .amb svg,.amb * {
+        animation: none!important
+    }
+}
+tr.newd td {
+    background: rgba(26,127,75,.18)
+}
+tr.newd td:first-child {
+    box-shadow: inset 4px 0 0 var(--ok)
+}
+select[data-act="rs"] {
+    min-width: 195px;
+    font-size: 17px!important;
+    padding: 10px 14px!important;
+    font-weight: 600;
+    cursor: pointer
+}
+.phero[data-p=record] {
+    --g: #1971c2
+}
+.rst {
+    margin-bottom: 12px
+}
+.rc {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-top: 26px
+}
+.rcol {
+    flex: 1;
+    text-align: center;
+    min-width: 0
+}
+.rbars {
+    height: 240px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    border-bottom: 2px solid var(--bd)
+}
+.rb {
+    width: 42%;
+    max-width: 34px;
+    position: relative;
+    border-radius: 5px 5px 0 0;
+    min-height: 2px
+}
+.rb span {
+    position: absolute;
+    top: -21px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--tx)
+}
+.rb.t,.rleg i.t {
+    background: var(--rd)
+}
+.rb.a,.rleg i.a {
+    background: #2f9e44
+}
+.rcol>b {
+    display: block;
+    margin-top: 6px;
+    font-size: 16px
+}
+.rleg {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin-top: 12px;
+    font-size: 15px
+}
+.rleg i {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: -2px
+}
