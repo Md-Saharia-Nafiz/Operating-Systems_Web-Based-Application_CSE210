@@ -929,3 +929,151 @@ select[data-act="rs"] {
     margin-right: 6px;
     vertical-align: -2px
 }
+@media(max-width:560px) {
+    .rc {
+        gap: 3px
+    }
+    .rb span {
+        font-size: 10px;
+        top: -16px
+    }
+    .rcol>b {
+        font-size: 12px
+    }
+}
+.mb nav {
+    padding-bottom: 46px
+}
+.amb {
+    bottom: -44px;
+    width: 96px;
+    height: 41px;
+    margin-left: -48px
+}
+.logo {
+    font-size: 20px
+}
+.mb nav {
+    justify-content: flex-start;
+    gap: 3px
+}
+.mb nav a:first-child {
+    margin-left: auto
+}
+.mb nav a {
+    padding: 7px 10px
+}
+.mb nav {
+    padding-left: 6px;
+    padding-right: 6px
+}
+.mb nav a {
+    padding: 7px 8px
+}
+.phero[data-p=reqrec] {
+    --g: #c2255c
+}
+.rb.q,.rleg i.q {
+    background: #e8590c
+}
+.rb.f,.rleg i.f {
+    background: #2f9e44
+}
+.mb nav {
+    gap: 1px
+}
+.mb nav a {
+    font-size: 13.5px;
+    padding: 7px 6px
+}
+.logo {
+    padding-left: 16px;
+    padding-right: 16px
+}
+.mb nav a {
+    padding: 7px 4px
+}
+.mb nav {
+    scrollbar-width: none
+}
+.mb nav::-webkit-scrollbar {
+    display: none
+}
+.sbar select:disabled {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: none;
+    text-align: center;
+    text-align-last: center
+}
+.mb nav a {
+    font-size: 13px;
+    padding: 7px 8px
+}
+.mb nav {
+    gap: 5px
+}
+.mb nav a {
+    font-size: 12.5px;
+    padding: 7px 7px
+}
+.mb nav {
+    gap: 2px
+}
+.stb {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 999px;
+    border: 1px solid currentColor;
+    margin-right: 8px;
+    vertical-align: middle
+}
+.stb.o {
+    color: #e8590c
+}
+.stb.f {
+    color: var(--ok)
+}
+.stb.c {
+    color: var(--mu)
+}
+select[data-act="rs"] {
+    width: auto!important;
+    min-width: 175px
+}
+td:has(>select[data-act="rs"]) {
+    white-space: nowrap;
+    min-width: 290px
+}
+#toast.warn {
+    background: #c4161c;
+    font-size: 17px;
+    font-weight: 700;
+    padding: 13px 24px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.35)
+}
+@keyframes shk {
+    0%,100% {
+        transform: translateX(0)
+    }
+    20% {
+        transform: translateX(-6px)
+    }
+    40% {
+        transform: translateX(6px)
+    }
+    60% {
+        transform: translateX(-4px)
+    }
+    80% {
+        transform: translateX(4px)
+    }
+}
+button.shake {
+    animation: shk .5s 2;
+    outline: 3px solid var(--rd);
+    outline-offset: 3px
+}
