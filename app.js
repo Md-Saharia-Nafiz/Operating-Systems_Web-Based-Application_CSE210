@@ -100,3 +100,37 @@ const mk = r => ({
   hist: r[4] ? [{ date: addD(today(), -r[4]), place: 'Previous donation' }] : [],
   created: today()
 });
+
+let newDonor = null;
+
+const SEED_R = [
+  ['Abdul Karim', 'O+', 2, 'Dhaka Medical College Hospital', 'Old Dhaka', 0, '01000010001', 'Urgent', 1],
+  ['Shahana Begum', 'A+', 1, 'Square Hospitals', 'Farmgate', 1, '01000010002', 'Urgent', 1],
+  ['Mizanur Rahman', 'B+', 3, 'United Hospital', 'Gulshan', 2, '01000010003', 'Within 3 days', 0],
+  ['Rokeya Khatun', 'AB+', 1, 'Evercare Hospital Dhaka (Apollo)', 'Badda', 3, '01000010004', 'Within 3 days', 1],
+  ['Jahangir Alam', 'O-', 2, 'Labaid Specialized Hospital', 'Dhanmondi', 4, '01000010005', 'Within 7 days', 1],
+  ['Salma Akter', 'A-', 1, 'Bangabandhu Sheikh Mujib Medical University (BSMMU)', 'Farmgate', 5, '01000010006', 'Within 7 days', 0],
+  ['Nurul Islam', 'B-', 2, 'Kurmitola General Hospital', 'Uttara', 6, '01000010007', 'Within 7 days', 1],
+  ['Rehana Parvin', 'AB-', 1, 'Mugda Medical College Hospital', 'Khilgaon', 7, '01000010008', 'Planned', 0]
+];
+
+const mkR = r => ({
+  id: uid(), patient: r[0], group: r[1], units: r[2], hospital: r[3],
+  loc: r[4], date: addD(today(), r[5]), phone: r[6], urgency: r[7],
+  status: 'Open', verified: r[8], created: today()
+});
+
+const SEED_H = [
+  ['Hasina Begum', 'O+', 2, 'Dhaka Medical College Hospital', 'Old Dhaka', 12, 'Fulfilled', 'Urgent'],
+  ['Anwar Hossain', 'O+', 3, 'Square Hospitals', 'Farmgate', 20, 'Fulfilled', 'Urgent'],
+  ['Selina Akter', 'O+', 1, 'Labaid Specialized Hospital', 'Dhanmondi', 31, 'Closed', 'Within 3 days'],
+  ['Kabir Ahmed', 'A+', 2, 'United Hospital', 'Gulshan', 9, 'Fulfilled', 'Urgent'],
+  ['Parveen Sultana', 'A+', 1, 'Holy Family Red Crescent Medical College Hospital', 'Malibagh', 26, 'Fulfilled', 'Within 7 days'],
+  ['Delwar Hossain', 'B+', 2, 'Evercare Hospital Dhaka (Apollo)', 'Badda', 15, 'Fulfilled', 'Within 3 days'],
+  ['Monira Khatun', 'B+', 1, 'Mugda Medical College Hospital', 'Khilgaon', 40, 'Closed', 'Planned'],
+  ['Faruk Mia', 'O-', 2, 'Kurmitola General Hospital', 'Uttara', 6, 'Fulfilled', 'Urgent'],
+  ['Nasima Yasmin', 'O-', 1, 'Sir Salimullah Medical College (Mitford) Hospital', 'Old Dhaka', 22, 'Fulfilled', 'Urgent'],
+  ['Shafiqul Alam', 'AB+', 1, 'National Institute of Cardiovascular Diseases (NICVD)', 'Shyamoli', 18, 'Fulfilled', 'Within 3 days'],
+  ['Rubina Akter', 'A-', 2, 'Ibn Sina Hospital', 'Dhanmondi', 28, 'Fulfilled', 'Within 7 days'],
+  ['Mahbub Alam', 'B-', 1, 'Bangladesh Specialized Hospital', 'Uttara', 35, 'Fulfilled', 'Planned']
+];
