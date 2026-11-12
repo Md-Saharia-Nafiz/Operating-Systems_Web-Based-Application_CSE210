@@ -134,3 +134,73 @@ const SEED_H = [
   ['Rubina Akter', 'A-', 2, 'Ibn Sina Hospital', 'Dhanmondi', 28, 'Fulfilled', 'Within 7 days'],
   ['Mahbub Alam', 'B-', 1, 'Bangladesh Specialized Hospital', 'Uttara', 35, 'Fulfilled', 'Planned']
 ];
+
+const mkH = (r, i) => ({
+  id: uid(), patient: r[0], group: r[1], units: r[2], hospital: r[3],
+  loc: r[4], date: addD(today(), -r[5]), phone: '0100002' + (1001 + i),
+  urgency: r[7], status: r[6], verified: 1, created: addD(today(), -r[5] - 2)
+});
+
+function seed() {
+  return {
+    seedV: 2, seedR: 1, seedH: 1,
+    donors: SEED_D.map(mk),
+    reqs: SEED_R.map(mkR).concat(SEED_H.map(mkH))
+  };
+}
+
+function load() {
+  try {
+    const s = localStorage.getItem('bloodlinkDhaka1');
+    if (s) return JSON.parse(s);
+  } catch (e) {}
+  return mem || seed();
+}
+
+let db = load();
+
+if (db.seedV !== 2) {
+  db.donors = db.donors.filter(d => !/^0171100000/.test(String(d.phone)));
+  SEED_D.map(mk).forEach(s => {
+    if (!db.donors.some(d => dig(d.phone) === dig(s.phone))) db.donors.push(s);
+  });
+  db.seedV = 2;
+  mem = db;
+  try { localStorage.setItem('bloodlinkDhaka1', JSON.stringify(db)); } catch (e) {}
+}
+
+db.donors.forEach(d => { if (d.loc === 'Mirpur') d.loc = 'Mirpur 10'; });
+db.reqs.forEach(r => { if (r.loc === 'Mirpur') r.loc = 'Mirpur 10'; });
+
+if (db.seedR !== 1) {
+  db.reqs = db.reqs.filter(r => r.phone !== '01811000001' && !/^010000100/.test(String(r.phone)));
+  SEED_R.map(mkR).forEach(s => {
+    if (!db.reqs.some(r => dig(r.phone) === dig(s.phone))) db.reqs.push(s);
+  });
+  db.seedR = 1;
+  mem = db;
+  try { localStorage.setItem('bloodlinkDhaka1', JSON.stringify(db)); } catch (e) {}
+}
+
+if (db.seedH !== 1) {
+  SEED_H.map(mkH).forEach(s => {
+    if (!db.reqs.some(r => dig(r.phone) === dig(s.phone))) db.reqs.push(s);
+  });
+  db.seedH = 1;
+  mem = db;
+  try { localStorage.setItem('bloodlinkDhaka1', JSON.stringify(db)); } catch (e) {}
+}
+
+function save() {
+  mem = db;
+  try { localStorage.setItem('bloodlinkDhaka1', JSON.stringify(db)); } catch (e) {}
+}
+
+function toast(m, ms, c) {
+  const t = $('#toast');
+  t.textContent = m;
+  t.className = c || '';
+  t.style.display = 'block';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.style.display = 'none', ms || 2600);
+}
