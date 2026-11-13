@@ -427,3 +427,131 @@ document.addEventListener('submit', e => {
     if (v.pin === PIN) { admin = true; V.admin(); } else toast('Wrong PIN');
   }
 });
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.tagName === 'SELECT') return;
+  const a = b.dataset.act, id = b.dataset.id, D = db.donors.find(x => x.id === id), Q = db.reqs.find(x => x.id === id);
+  if (a === 'hs') {
+    if (!$('#hg').value) return toast('Please select a blood group');
+    pre = { g: $('#hg').value, l: $('#hl').value };
+    location.hash = 'search';
+  } else if (a === 'reveal') {
+    b.outerHTML = `<a class="ph" href="tel:${esc(D.phone)}">📞 ${esc(D.phone)}</a>`;
+  } else if (a === 'rq') {
+    b.outerHTML = `<a class="ph rq" data-id="${id}" href="tel:${esc(Q.phone)}">📞 ${esc(Q.phone)}</a>`;
+  } else if (a === 'tog') {
+    const d = db.donors.find(x => x.id === me);
+    d.avail = d.avail ? 0 : 1;
+    save();
+    V.profile();
+  } else if (a === 'out') {
+    me = null;
+    V.profile();
+  } else if (a === 'del') {
+    if (confirm('Delete your donor profile permanently?')) {
+      db.donors = db.donors.filter(x => x.id !== me);
+      me = null;
+      save();
+      V.profile();
+      toast('Profile deleted');
+    }
+  } else if (a === 'tab') {
+    tab = id;
+    V.admin();
+  } else if (a === 'alogout') {
+    admin = false;
+    V.admin();
+  } else if (a === 'vd') {
+    D.verified = D.verified ? 0 : 1;
+    save();
+    V.admin();
+  } else if (a === 'vr') {
+    Q.verified = Q.verified ? 0 : 1;
+    save();
+    V.admin();
+  } else if (a === 'dd') {
+    if (confirm('Delete this donor?')) {
+      db.donors = db.donors.filter(x => x.id !== id);
+      save();
+      V.admin();
+    }
+  } else if (a === 'dr') {
+    if (confirm('Delete this request?')) {
+      db.reqs = db.reqs.filter(x => x.id !== id);
+      save();
+      V.admin();
+    }
+  }
+});
+
+document.addEventListener('click', e => {
+  const x = e.target.closest('[data-g]');
+  if (x) pre = { g: x.dataset.g, l: '' };
+});
+
+function hideDon() {
+  document.querySelectorAll('.rv').forEach(x => {
+    x.outerHTML = `<button class="s g" data-act="dshow" data-id="${x.dataset.id}">Show</button>`;
+  });
+}
+
+document.addEventListener('click', e => {
+  if (e.target.closest('.rv')) return;
+  const b = e.target.closest('[data-act="dshow"]');
+  hideDon();
+  if (b) {
+    const D = db.donors.find(x => x.id === b.dataset.id);
+    if (D) b.outerHTML = `<a class="ph rv" data-id="${D.id}" href="tel:${esc(D.phone)}" title="Call"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align:-2px;margin-right:6px"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>${esc(D.phone)}</a>`;
+  }
+});
+
+document.addEventListener('change', e => {
+  if (e.target.dataset.act === 'rs') {
+    db.reqs.find(x => x.id === e.target.dataset.id).status = e.target.value;
+    save();
+    toast('Status updated');
+    V.admin();
+  }
+});
+
+const PHONE = '01768620607', EMAIL = 'contactbloodlink-Dhaka@gmail.com';
+const NOTE = '<b>Dhaka only:</b> search covers donors and requests inside Dhaka. BloodLink does not verify donors and cannot guarantee blood availability. Always confirm the donor’s health and eligibility, and use a licensed hospital or blood bank. Share contact details responsibly.';
+const HERO = {
+  reqrec: ['Request Record', 'Which blood groups people ask for most, and how much they have received'],
+  record: ['Donors Record', 'Blood group wise record of every donor registered in Dhaka'],
+  summary: ['Summary', 'Why we donate blood, its benefits and who can give blood to whom'],
+  donors: ['All Donor List', 'Everyone who has registered or donated blood in Dhaka'],
+  search: ['Find a Blood Donor in Dhaka', 'Search available donors by blood group and area.'],
+  register: ['Become a Blood Donor', 'Register in a minute and help save a life in Dhaka.'],
+  request: ['Emergency Blood Request', 'Post a request so donors in Dhaka can reach you quickly.'],
+  profile: ['My Donor Profile', 'Update your details, availability and donation history.'],
+  admin: ['Admin Dashboard', 'Manage donors and requests, verify information and view reports.']
+};
+
+Object.assign(HERO, PT);
+
+const tl = document.querySelector('.tl');
+if (tl) tl.innerHTML = `<a href="tel:+88${PHONE}">📞 ${PHONE}</a><a href="mailto:${EMAIL}">✉ ${EMAIL}</a><span>📍 Dhaka, Bangladesh</span>`;
+
+function dress(h) {
+  const a = $('#app');
+  if (a.lastElementChild && a.lastElementChild.tagName === 'FOOTER') return;
+  if (h !== 'home') {
+    const w = document.createElement('div');
+    w.className = 'wrap';
+    const n = document.createElement('div');
+    n.className = 'note';
+    n.innerHTML = NOTE;
+    w.appendChild(n);
+    while (a.firstChild) w.appendChild(a.firstChild);
+    const s = document.createElement('section');
+    s.className = 'phero';
+    s.dataset.p = h;
+    s.innerHTML = `<h1>${HERO[h][0]}</h1><p>${HERO[h][1]}</p>`;
+    a.append(s, w);
+  }
+  const f = document.createElement('footer');
+  f.innerHTML = `<b>BloodLink Dhaka</b><br>📞 <a href="tel:+88${PHONE}">${PHONE}</a> · ✉ <a href="mailto:${EMAIL}">${EMAIL}</a><br><small>Donors are not verified by BloodLink; always confirm with a licensed hospital or blood bank.</small>`;
+  a.append(f);
+}
