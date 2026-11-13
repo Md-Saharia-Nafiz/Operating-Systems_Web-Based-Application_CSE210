@@ -204,3 +204,226 @@ function toast(m, ms, c) {
   clearTimeout(t._t);
   t._t = setTimeout(() => t.style.display = 'none', ms || 2600);
 }
+
+const elig = d => !d.last || days(d.last) >= GAP;
+const status = d => !d.avail ? ['Unavailable', 'mu'] : !elig(d) ? ['Eligible from ' + fd(addD(d.last, GAP)), 'wn'] : ['Available', 'ok'];
+const badge = d => `<span class="b">${esc(d.group)}</span>`;
+const ver = v => v ? '<span class="t ok">Verified by admin</span>' : '<span class="t mu">Unverified</span>';
+const val = { phone: p => /^\+?\d{8,15}$/.test(String(p).replace(/[\s-]/g, '')) };
+const R = ['home', 'summary', 'donors', 'record', 'search', 'register', 'request', 'reqrec', 'profile', 'admin'];
+
+const AMB = `<span class="amb"><svg viewBox="-30 0 150 64" aria-hidden="true"><g class="spg"><line class="sp" x1="-28" y1="18" x2="-8" y2="18"/><line class="sp" x1="-24" y1="30" x2="-2" y2="30" style="animation-delay:.15s"/><line class="sp" x1="-26" y1="42" x2="-6" y2="42" style="animation-delay:.3s"/></g><g class="bd"><rect x="6" y="8" width="66" height="36" rx="4" fill="#fff" stroke="#e3e6ea"/><path d="M72 12h20q4 0 7 3l13 15q3 3 3 8v6H72z" fill="#fff" stroke="#e3e6ea"/><rect x="6" y="30" width="109" height="5" fill="#d62828"/><rect x="6" y="38" width="66" height="6" fill="#d62828"/><circle cx="26" cy="19" r="9" fill="#d62828"/><path d="M26 14v10M21 19h10" stroke="#fff" stroke-width="4"/><rect x="42" y="12" width="12" height="15" rx="2" fill="#a8d4f5"/><path d="M77 14h15l9 12H77z" fill="#a8d4f5"/><rect class="s1" x="72" y="5" width="10" height="5" rx="1" fill="#ff2d2d"/><rect class="s2" x="84" y="5" width="10" height="5" rx="1" fill="#ffb300"/><rect x="111" y="34" width="5" height="7" rx="1" fill="#ffc928"/><rect x="3" y="35" width="3" height="6" rx="1" fill="#ff9f1c"/><rect x="4" y="44" width="114" height="6" rx="2" fill="#2b2d3a"/></g><g transform="translate(26 51)"><g class="wh"><circle r="9" fill="#2b2d3a"/><circle r="4.5" fill="#e6e9ee"/><path d="M-4.5 0h9M0-4.5v9" stroke="#9aa3ad" stroke-width="1.5"/></g></g><g transform="translate(90 51)"><g class="wh"><circle r="9" fill="#2b2d3a"/><circle r="4.5" fill="#e6e9ee"/><path d="M-4.5 0h9M0-4.5v9" stroke="#9aa3ad" stroke-width="1.5"/></g></g></svg></span>`;
+
+function route() {
+  showReq = false;
+  let h = location.hash.slice(1);
+  if (!R.includes(h)) h = 'home';
+  if (me && h !== 'profile') { lockWarn(); location.replace('#profile'); return; }
+  if (h !== 'admin') { admin = false; tab = 'donors'; }
+  if (h !== 'donors') newDonor = null;
+  document.body.classList.toggle('home', h === 'home');
+  ph(h);
+  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.hash === '#' + h));
+  document.querySelectorAll('.amb').forEach(x => x.remove());
+  {
+    const on = document.querySelector('nav a.on');
+    if (on) on.insertAdjacentHTML('beforeend', AMB);
+  }
+  V[h]();
+  window.scrollTo(0, 0);
+}
+
+const V = {};
+const PT = {
+  search: ['Find a Blood Donor in Dhaka', 'Search available donors by blood group and area.'],
+  register: ['Become a Blood Donor', 'Register in a minute and help save a life in Dhaka.'],
+  request: ['Emergency Blood Request', 'Post a request so donors in Dhaka can reach you quickly.'],
+  profile: ['My Donor Profile', 'Update your details, availability and donation history.'],
+  admin: ['Admin Dashboard', 'Manage donors and requests, verify information and view reports.']
+};
+
+function ph(h) { $('#ph').innerHTML = ''; }
+
+let pre = null;
+
+V.home = () => {
+  const c = g => db.donors.filter(d => d.group === g && d.avail && elig(d) && inD(d)).length;
+  $('#app').innerHTML = `<section class="hero"><h1>Efficiently Connect with Blood Donors: Saving Lives Made Simpler and Faster</h1><div class="sbar"><select id="hg" required><option value="">Select Blood Group</option>${opts(G)}</select><select disabled><option>Inside Dhaka</option></select><select id="hl"><option value="">None</option>${opts(AREAS)}</select><button data-act="hs">🔍 SEARCH</button></div></section>
+  <div class="wrap"><div class="two"><a class="c1" href="#register"><h3>Register Now</h3><p>Become a donor and help save a life in Dhaka.</p></a><a class="c2" href="#profile"><h3>Already Donated?</h3><p>Update your availability and donation history.</p></a></div>
+  <h2 class="ct">Available Blood Donors</h2><div class="grid">${G.map(g => `<a class="bg" href="#search" data-g="${g}"><b>🩸 ${g}</b><span>(${c(g)})</span></a>`).join('')}</div>${cellsHtml()}</div>`;
+};
+
+V.donors = () => {
+  $('#app').innerHTML = `<div class="card"><h2>All Donors (${db.donors.length})</h2><div class="row"><div><label>Blood group</label><select id="dg"><option value="">All</option>${opts(G)}</select></div><div><label>Area</label><select id="da"><option value="">None</option>${opts(AREAS)}</select></div></div></div><div class="card tw" id="dl"></div>`;
+  ['dg', 'da'].forEach(i => $('#' + i).addEventListener('input', donorList));
+  donorList();
+  if (newDonor) setTimeout(() => { const nr = $('#dl .newd'); if (nr) nr.scrollIntoView({ block: 'center' }); }, 120);
+};
+
+function donorList() {
+  const g = $('#dg').value, a = $('#da').value, r = db.donors.filter(d => (!g || d.group === g) && (!a || d.loc === a)).sort((x, y) => x.name.localeCompare(y.name));
+  $('#dl').innerHTML = `<table><tr><th>#</th><th>Name</th><th>Group</th><th>Area</th><th>Status</th><th>Donations</th><th>Last donated</th><th>Contact</th></tr>${r.map((d, i) => { const [s, c] = status(d); return `<tr${d.id === newDonor ? ' class="newd"' : ''}><td>${i + 1}</td><td>${esc(d.name)} ${d.verified ? '<span class="t ok">Verified</span>' : ''}</td><td>${badge(d)}</td><td>${esc(d.loc || '—')}</td><td class="${c}">${esc(s)}</td><td>${d.hist.length}</td><td>${esc(d.last ? fd(d.last) : '—')}</td><td class="ctc"><button class="s g" data-act="dshow" data-id="${d.id}">Show</button></td></tr>`; }).join('') || '<tr><td colspan="8">No donors yet.</td></tr>'}</table>`;
+}
+
+const CELLS = [
+  ['Red Blood Cells (RBC)', 95.1, 'Carry oxygen from the lungs to every part of the body', '#c4161c'],
+  ['Platelets', 4.8, 'Help blood to clot and stop bleeding', '#7048e8'],
+  ['White Blood Cells (WBC)', 0.1, 'Fight infections and protect the body', '#0c8599']
+];
+
+const cellsHtml = () => `<h2 class="ct">What Is in Your Blood? (Blood Cells)</h2><div class="card">${CELLS.map(c => `<div class="cb"><div class="cbh"><b>${c[0]}</b><b>${c[1]}%</b></div><div class="cbt"><div class="cbf" style="width:${Math.max(c[1], 0.6)}%;background:${c[3]}"></div></div><small class="mu">${c[2]}</small></div>`).join('')}<p class="mu" style="font-size:12px;margin-bottom:0">Approximate share of the three cell types by number in a healthy adult (about 5 million red cells, 250 thousand platelets and 7 thousand white cells per µL of blood). Values differ from person to person. Plasma, the liquid part of blood, is not counted here.</p></div>`;
+
+V.summary = () => {
+  const L = [
+    'Blood cannot be made in a laboratory, so hospitals depend completely on voluntary donors.',
+    'Every day patients need blood after accidents, surgeries, childbirth complications, burns, cancer treatment, dengue and thalassemia.',
+    'One donation can help up to three people, because it is separated into red cells, platelets and plasma.',
+    'A healthy adult’s body replaces the donated fluid within a day or two and the red cells within a few weeks.',
+    'Before donating you get a quick free check of your pulse, blood pressure, temperature and haemoglobin.',
+    'Licensed blood banks screen donated blood for infections such as HIV, hepatitis B and C, syphilis and malaria.',
+    'Donating is a simple way to help your own city and gives a real sense of purpose.',
+    'A ready list of donors in Dhaka saves families precious time when they search in an emergency.',
+    'Donate only if you are healthy, 18 or older, weigh at least 50 kg, and wait at least 3 months between donations.',
+    'Always donate through a licensed hospital or blood bank, and tell the staff about any illness or medicine.'
+  ];
+  $('#app').innerHTML = `<div class="card"><h2>Why Donate Blood? Benefits of Donating</h2><ol class="sl">${L.map(x => `<li>${x}</li>`).join('')}</ol></div><div class="card tw"><h2>Who Can Give Blood to Whom?</h2><table class="cmp"><tr><th>Donor group</th><th>Can donate to</th><th>Cannot donate to</th></tr>${G.map(d => `<tr><td>${badge({ group: d })}</td><td>${G.filter(r => CAN[r].includes(d)).map(x => `<span class="chip y">${x}</span>`).join('')}</td><td>${G.filter(r => !CAN[r].includes(d)).map(x => `<span class="chip n">${x}</span>`).join('') || '<span class="mu">None</span>'}</td></tr>`).join('')}</table><p class="mu" style="font-size:12px">This table is for red blood cells. Plasma and platelet matching follows different rules, and hospitals always cross-match blood before a transfusion.</p></div>`;
+};
+
+V.record = () => {
+  const cnt = G.map(g => ({
+    g,
+    t: db.donors.filter(d => d.group === g).length,
+    a: db.donors.filter(d => d.group === g && d.avail && elig(d)).length,
+    v: db.donors.filter(d => d.group === g && d.verified).length
+  })), mx = Math.max(1, ...cnt.map(c => c.t)), T = db.donors.length, sum = k => cnt.reduce((s, c) => s + c[k], 0);
+  $('#app').innerHTML = `<div class="st rst"><div><b>${T}</b>Total donors</div><div><b>${sum('a')}</b>Available now</div><div><b>${sum('v')}</b>Verified</div></div>
+  <div class="card"><h3 style="margin-top:0">Donors by Blood Group</h3><div class="rc">${cnt.map(c => `<div class="rcol"><div class="rbars"><div class="rb t" style="height:${Math.max(c.t / mx * 100, 1)}%"><span>${c.t}</span></div><div class="rb a" style="height:${Math.max(c.a / mx * 100, 1)}%"><span>${c.a}</span></div></div><b>${c.g}</b></div>`).join('')}</div><div class="rleg"><span><i class="t"></i>Registered</span><span><i class="a"></i>Available now</span></div></div>
+  <div class="card tw"><h3 style="margin-top:0">Record Table</h3><table><tr><th>Blood group</th><th>Registered</th><th>Share</th><th>Available now</th><th>Verified</th></tr>${cnt.map(c => `<tr><td>${badge({ group: c.g })}</td><td>${c.t}</td><td>${T ? (c.t / T * 100).toFixed(1) : '0.0'}%</td><td>${c.a}</td><td>${c.v}</td></tr>`).join('')}<tr><td><b>Total</b></td><td><b>${T}</b></td><td><b>100%</b></td><td><b>${sum('a')}</b></td><td><b>${sum('v')}</b></td></tr></table></div>`;
+};
+
+V.reqrec = () => {
+  const cnt = G.map(g => {
+    const r = db.reqs.filter(x => x.group === g), f = r.filter(x => x.status === 'Fulfilled'), su = a => a.reduce((s, x) => s + (+x.units || 0), 0);
+    return { g, n: r.length, u: su(r), fn: f.length, fu: su(f) };
+  }), mx = Math.max(1, ...cnt.map(c => c.u)), sum = k => cnt.reduce((s, c) => s + c[k], 0), T = sum('u'), top = cnt.slice().sort((a, b) => b.u - a.u)[0], open = db.reqs.filter(r => r.status === 'Open').length;
+  $('#app').innerHTML = `<div class="st rst"><div><b>${db.reqs.length}</b>Total requests</div><div><b>${open}</b>Open now</div><div><b>${T}</b>Units requested</div><div><b>${sum('fu')}</b>Units received</div><div><b>${top && top.u ? top.g : '—'}</b>Most requested</div></div>
+  <div class="card"><h3 style="margin-top:0">Requested vs Received (blood units)</h3><div class="rc">${cnt.map(c => `<div class="rcol"><div class="rbars"><div class="rb q" style="height:${Math.max(c.u / mx * 100, 1)}%"><span>${c.u}</span></div><div class="rb f" style="height:${Math.max(c.fu / mx * 100, 1)}%"><span>${c.fu}</span></div></div><b>${c.g}</b></div>`).join('')}</div><div class="rleg"><span><i class="q"></i>Requested</span><span><i class="f"></i>Received</span></div><p class="mu" style="font-size:13px;text-align:center;margin-bottom:0">Received means units of requests marked Fulfilled by the admin.</p></div>
+  <div class="card tw"><h3 style="margin-top:0">Record Table</h3><table><tr><th>Blood group</th><th>Requests</th><th>Units requested</th><th>Share</th><th>Fulfilled</th><th>Units received</th><th>Received %</th></tr>${cnt.map(c => `<tr><td>${badge({ group: c.g })}</td><td>${c.n}</td><td>${c.u}</td><td>${T ? (c.u / T * 100).toFixed(1) : '0.0'}%</td><td>${c.fn}</td><td>${c.fu}</td><td>${c.u ? Math.round(c.fu / c.u * 100) : 0}%</td></tr>`).join('')}<tr><td><b>Total</b></td><td><b>${sum('n')}</b></td><td><b>${T}</b></td><td><b>100%</b></td><td><b>${sum('fn')}</b></td><td><b>${sum('fu')}</b></td><td><b>${T ? Math.round(sum('fu') / T * 100) : 0}%</b></td></tr></table></div>`;
+};
+
+V.search = () => {
+  $('#app').innerHTML = `<div class="card"><div class="row"><div><label>Blood group needed</label><select id="sg" required><option value="">- Select Blood Group -</option>${opts(G)}</select></div><div><label>Area in Dhaka</label><select id="sl"><option value="">None</option>${opts(AREAS)}</select></div></div>
+  <label class="ck"><input type="checkbox" id="sc">Include compatible donor groups</label><label class="ck"><input type="checkbox" id="sa" checked>Show only available donors</label></div><div class="card" id="res"></div>`;
+  ['sg', 'sl', 'sc', 'sa'].forEach(i => $('#' + i).addEventListener('input', doSearch));
+  if (pre) { $('#sg').value = pre.g || ''; $('#sl').value = pre.l || ''; pre = null; }
+  doSearch();
+};
+
+function dcard(d, i) {
+  const [s, c] = status(d);
+  return `<div class="it"><div><b class="sn">${i + 1}.</b> ${badge(d)}<b>${esc(d.name)}</b>${ver(d.verified)}<br><span class="mu">📍 ${esc(d.loc || 'No area')} · <span class="${c}">${esc(s)}</span>${d.last ? ' · Last donated ' + fd(d.last) : ''}</span></div><button class="s g" data-act="reveal" data-id="${d.id}">Show contact</button></div>`;
+}
+
+function doSearch() {
+  const g = $('#sg').value;
+  if (!g) { $('#res').innerHTML = '<p class="mu">Please select a blood group above to see the matching donors.</p>'; return; }
+  const l = $('#sl').value.toLowerCase().trim(), gs = g ? ($('#sc').checked ? CAN[g] : [g]) : G, av = $('#sa').checked;
+  const r = db.donors.filter(d => gs.includes(d.group) && inD(d) && (!l || d.loc.toLowerCase() === l) && (!av || (d.avail && elig(d))));
+  $('#res').innerHTML = `<h3 style="margin-top:0">${r.length} donor${r.length == 1 ? '' : 's'} found</h3>` + (r.map(dcard).join('') || '<p class="mu">No donors match in Dhaka. Try another area, include compatible groups, or post a blood request.</p>');
+}
+
+V.register = () => {
+  $('#app').innerHTML = `<div class="card"><form id="fr"><div class="row"><div><label>Full name</label><input name="name" required maxlength="60"></div><div><label>Blood group</label><select name="group" required><option value="">- Select Blood Group -</option>${opts(G)}</select></div><div><label>Contact number</label><input name="phone" required placeholder="01XXXXXXXXX"></div><div><label>Area in Dhaka</label><select name="loc"><option value="">None</option>${opts(AREAS)}</select></div><div><label>Last donation date (optional)</label>${dfield('last', 0, '', '', today())}</div></div>
+  <label class="ck"><input type="checkbox" name="age" required>I am 18 or older and in good health.</label><label class="ck"><input type="checkbox" name="ok" required>I consent to my name, blood group, area and (on request) phone number being shown to people seeking blood.</label><button>Register</button></form></div>`;
+};
+
+let showReq = false;
+
+V.request = () => {
+  const o = db.reqs.filter(r => r.status === 'Open');
+  $('#app').innerHTML = `<div class="card"><form id="fq"><div class="row"><div><label>Patient name / info</label><input name="patient" required maxlength="80"></div><div><label>Required blood group</label><select name="group" required><option value="">- Select Blood Group -</option>${opts(G)}</select></div><div><label>Units needed</label><input type="number" name="units" min="1" max="20" value="1"></div><div><label>Hospital name</label><input name="hospital" required maxlength="80" list="hosp" placeholder="Type or choose a hospital" autocomplete="off"><datalist id="hosp">${HOSP.map(h => `<option value="${esc(h)}">`).join('')}</datalist></div><div><label>Area in Dhaka</label><select name="loc"><option value="">None</option>${opts(AREAS)}</select></div><div><label>Required date</label>${dfield('date', 1, '', today(), '')}</div><div><label>Contact number</label><input name="phone" required placeholder="01XXXXXXXXX"></div><div><label>Urgency</label><select name="urgency" required><option value="" disabled selected hidden>Type or Choose</option>${opts(['Urgent', 'Within 3 days', 'Within 7 days', 'Planned'])}</select></div></div><button>Submit Request</button></form></div>
+  ${showReq ? `<div class="card"><h2>Open Requests (${o.length})</h2>${o.map((r, i) => { const m = db.donors.filter(d => CAN[r.group].includes(d.group) && d.avail && elig(d) && inD(d)).length; return `<div class="it"><div><b class="sn">${i + 1}.</b> ${badge(r)}<b>${esc(r.units)} unit(s)</b> · ${esc(r.urgency)}${ver(r.verified)}<br><span class="mu">${esc(r.patient)} · ${esc(r.hospital)}${r.loc ? ', ' + esc(r.loc) : ''} · needed by ${fd(r.date)}<br>${m} matching available donor(s) in Dhaka</span></div><button class="s g" data-act="rq" data-id="${r.id}">Show contact</button></div>`; }).join('') || '<p class="mu">No open requests.</p>'}</div>` : ''}`;
+};
+
+V.profile = () => {
+  if (!me) {
+    $('#app').innerHTML = `<div class="card"><form id="fl"><label>Enter your registered phone number</label><input name="phone" required><button>Open Profile</button></form><p class="mu">Demo note: a phone number is used as a simple lookup. A real deployment must add OTP/password login.</p></div>`;
+    return;
+  }
+  const d = db.donors.find(x => x.id === me);
+  if (!d) { me = null; return V.profile(); }
+  const [s, c] = status(d);
+  $('#app').innerHTML = `<div class="card"><h2>${badge(d)}${esc(d.name)} ${ver(d.verified)}</h2><p>Status: <b class="${c}">${esc(s)}</b></p><button class="s" data-act="tog">${d.avail ? 'Mark as unavailable' : 'Mark as available'}</button> <button class="s g" data-act="out">Sign out</button></div>
+  <div class="card"><h3 style="margin-top:0">Update information</h3><form id="fu"><div class="row"><div><label>Name</label><input name="name" value="${esc(d.name)}" required></div><div><label>Blood group</label><select name="group">${opts(G, d.group)}</select></div><div><label>Phone</label><input name="phone" value="${esc(d.phone)}" required></div><div><label>Area in Dhaka</label><select name="loc"><option value="">None</option>${opts(AREAS, d.loc)}</select></div></div><button>Save changes</button></form></div>
+  <div class="card"><h3 style="margin-top:0">Donation history (${d.hist.length})</h3><form id="fh" class="row"><div><label>Date</label>${dfield('date', 1, '', '', today())}</div><div><label>Place / hospital</label><input name="place" required maxlength="80"></div><div><label>&nbsp;</label><button style="margin:0">Add donation</button></div></form>${[...d.hist].sort((a, b) => b.date.localeCompare(a.date)).map(h => `<div class="it"><span>${fd(h.date)} — ${esc(h.place)}</span></div>`).join('') || '<p class="mu">No donations recorded yet.</p>'}<button class="g" data-act="del">Delete my profile</button></div>`;
+};
+
+V.admin = () => {
+  if (!admin) {
+    $('#app').innerHTML = `<div class="card"><h2>Admin Login</h2><form id="fa"><label>Admin PIN</label><input type="password" name="pin" required><button>Login</button></form></div>`;
+    return;
+  }
+  const T = ['donors', 'requests', 'reports'].map(t => `<button class="s ${t === tab ? '' : 'g'}" data-act="tab" data-id="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('');
+  let h = `<div class="card">${T}<button class="s g" data-act="alogout">Logout</button></div><div class="card tw">`;
+  
+  if (tab === 'donors') {
+    h += `<table><tr><th>Name</th><th>Group</th><th>Location</th><th>Phone</th><th>Status</th><th>Actions</th></tr>${db.donors.map(d => `<tr><td>${esc(d.name)}</td><td>${esc(d.group)}</td><td>${esc(d.loc || '—')}</td><td>${esc(d.phone)}</td><td>${ver(d.verified)}</td><td><button class="s" data-act="vd" data-id="${d.id}">${d.verified ? 'Unverify' : 'Verify'}</button><button class="s g" data-act="dd" data-id="${d.id}">Delete</button></td></tr>`).join('')}</table>`;
+  } else if (tab === 'requests') {
+    h += `<table><tr><th>Patient</th><th>Group</th><th>Hospital</th><th>Date</th><th>Phone</th><th>Verified</th><th>Status</th><th></th></tr>${db.reqs.map(r => `<tr><td>${esc(r.patient)}</td><td>${esc(r.group)}</td><td>${esc(r.hospital)}</td><td>${fd(r.date)}</td><td>${esc(r.phone)}</td><td>${ver(r.verified)}<button class="s" data-act="vr" data-id="${r.id}">${r.verified ? 'Unverify' : 'Verify'}</button></td><td><span class="stb ${r.status === 'Open' ? 'o' : r.status === 'Fulfilled' ? 'f' : 'c'}">${esc(r.status)}</span><select data-act="rs" data-id="${r.id}" required><option value="" disabled selected hidden>Type or Choose</option>${opts(['Open', 'Fulfilled', 'Closed'], '')}</select></td><td><button class="s g" data-act="dr" data-id="${r.id}">Delete</button></td></tr>`).join('') || '<tr><td>No requests</td></tr>'}</table>`;
+  } else {
+    const av = db.donors.filter(d => d.avail && elig(d)).length, op = db.reqs.filter(r => r.status === 'Open').length, mx = Math.max(1, ...G.map(g => Math.max(db.donors.filter(d => d.group === g).length, db.reqs.filter(r => r.group === g && r.status === 'Open').length)));
+    h += `<div class="st"><div><b>${db.donors.length}</b>Donors</div><div><b>${db.donors.filter(d => d.verified).length}</b>Verified</div><div><b>${av}</b>Available now</div><div><b>${op}</b>Open requests</div><div><b>${db.reqs.filter(r => r.status === 'Fulfilled').length}</b>Fulfilled</div></div><h3>Supply vs demand by blood group</h3><p class="mu">Red: donors · Orange: open requests</p>${G.map(g => { const a = db.donors.filter(d => d.group === g).length, b = db.reqs.filter(r => r.group === g && r.status === 'Open').length; return `<div style="display:grid;grid-template-columns:40px 1fr;gap:8px;align-items:center;margin:6px 0"><b>${g}</b><div><div class="bar" style="width:${a / mx * 100}%"></div><div class="bar o" style="width:${b / mx * 100}%;margin-top:2px"></div></div></div>`; }).join('')}`;
+  }
+  $('#app').innerHTML = h + '</div>';
+};
+
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target, v = Object.fromEntries(new FormData(f)), id = f.id;
+  for (const k of ['last', 'date']) {
+    if (v[k]) {
+      const iso = td(v[k]), el = f.elements[k];
+      if (!iso || (el.dataset.min && iso < el.dataset.min) || (el.dataset.max && iso > el.dataset.max)) return toast('Enter a valid date in dd/mm/yyyy format' + (el.dataset.max ? ' (not in the future)' : el.dataset.min ? ' (not in the past)' : ''));
+      v[k] = iso;
+    }
+  }
+  if (id === 'fr') {
+    if (!val.phone(v.phone)) return toast('Enter a valid phone number');
+    if (db.donors.some(d => dig(d.phone) === dig(v.phone))) return toast('This number is already registered');
+    newDonor = uid();
+    db.donors.push({ id: newDonor, name: v.name.trim(), group: v.group, phone: v.phone.trim(), loc: v.loc.trim(), avail: 1, last: v.last || '', verified: 0, hist: v.last ? [{ date: v.last, place: 'Previous donation' }] : [], created: today() });
+    save();
+    toast('Registered successfully! You are now in the All Donors list.');
+    location.hash = 'donors';
+  } else if (id === 'fq') {
+    if (!val.phone(v.phone)) return toast('Enter a valid phone number');
+    db.reqs.unshift({ id: uid(), patient: v.patient.trim(), group: v.group, units: +v.units || 1, hospital: v.hospital.trim(), loc: v.loc.trim(), date: v.date, phone: v.phone.trim(), urgency: v.urgency, status: 'Open', verified: 0, created: today() });
+    save();
+    toast('Request posted');
+    showReq = true;
+    V.request();
+  } else if (id === 'fl') {
+    const d = db.donors.find(x => dig(x.phone) === dig(v.phone));
+    if (!d) return toast('No donor found with this number');
+    me = d.id;
+    V.profile();
+  } else if (id === 'fu') {
+    const d = db.donors.find(x => x.id === me);
+    if (!val.phone(v.phone)) return toast('Invalid phone number');
+    if (db.donors.some(x => x.id !== me && dig(x.phone) === dig(v.phone))) return toast('Number already in use');
+    if (d.group !== v.group || dig(d.phone) !== dig(v.phone)) d.verified = 0;
+    Object.assign(d, { name: v.name.trim(), group: v.group, phone: v.phone.trim(), loc: v.loc.trim() });
+    save();
+    toast('Profile updated');
+    V.profile();
+  } else if (id === 'fh') {
+    const d = db.donors.find(x => x.id === me);
+    d.hist.push({ date: v.date, place: v.place.trim() });
+    if (!d.last || v.date > d.last) d.last = v.date;
+    save();
+    toast('Donation added');
+    V.profile();
+  } else if (id === 'fa') {
+    if (v.pin === PIN) { admin = true; V.admin(); } else toast('Wrong PIN');
+  }
+});
