@@ -555,3 +555,80 @@ function dress(h) {
   f.innerHTML = `<b>BloodLink Dhaka</b><br>📞 <a href="tel:+88${PHONE}">${PHONE}</a> · ✉ <a href="mailto:${EMAIL}">${EMAIL}</a><br><small>Donors are not verified by BloodLink; always confirm with a licensed hospital or blood bank.</small>`;
   a.append(f);
 }
+
+Object.keys(V).forEach(k => {
+  const f = V[k];
+  V[k] = (...x) => { f(...x); dress(k); };
+});
+
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (!t.classList.contains('dti')) return;
+  const d = t.value.replace(/\D/g, '').slice(0, 8);
+  t.value = d.slice(0, 2) + (d.length > 2 ? '/' + d.slice(2, 4) : '') + (d.length > 4 ? '/' + d.slice(4) : '');
+});
+
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.classList.contains('dtp') && t.value) t.parentElement.querySelector('.dti').value = fd(t.value);
+});
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act="cal"]');
+  if (!b) return;
+  const p = b.parentElement.querySelector('.dtp'), t = b.parentElement.querySelector('.dti'), i = td(t.value);
+  if (i) p.value = i;
+  try { p.showPicker(); } catch (x) { p.focus(); }
+});
+
+const noAC = () => document.querySelectorAll('#app form,#app input,#app textarea').forEach(x => x.setAttribute('autocomplete', x.type === 'password' ? 'new-password' : 'off'));
+new MutationObserver(noAC).observe($('#app'), { childList: true, subtree: true });
+noAC();
+
+document.addEventListener('click', e => {
+  document.querySelectorAll('.rq').forEach(x => {
+    if (!x.contains(e.target)) x.outerHTML = `<button class="s g" data-act="rq" data-id="${x.dataset.id}">Show contact</button>`;
+  });
+}, true);
+
+addEventListener('storage', e => {
+  if (e.key === 'bloodlinkDhaka1') {
+    db = load();
+    {
+      const h = location.hash;
+      if (h === '#donors') V.donors();
+      else if (h === '#record') V.record();
+      else if (h === '#reqrec') V.reqrec();
+    }
+  }
+});
+
+function lockWarn() {
+  toast('Please Sign Out Your Profile', 4500, 'warn');
+  const b = document.querySelector('[data-act="out"]');
+  if (b) {
+    b.classList.remove('shake');
+    void b.offsetWidth;
+    b.classList.add('shake');
+    b.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+}
+
+document.addEventListener('click', e => {
+  if (!me) return;
+  const a = e.target.closest('a[href]');
+  if (!a) return;
+  const h = a.getAttribute('href');
+  if (h && h.startsWith('#') && h !== '#profile') {
+    e.preventDefault();
+    e.stopPropagation();
+    lockWarn();
+  }
+}, true);
+
+addEventListener('beforeunload', e => {
+  if (me) { e.preventDefault(); e.returnValue = ''; }
+});
+
+addEventListener('hashchange', route);
+route();
